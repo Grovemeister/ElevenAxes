@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Eleven Axes</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5f8;--ink:#1b2a41;--muted:#566377;--card:#fff;--line:#c3ccd8;--hover:#eaeff6;--focus:#2f6fb5;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151c;--ink:#e7ecf3;--muted:#9aa7b8;--card:#19202a;--line:#3a4658;--hover:#232d3b;--focus:#7fb0ea}}
+:root[data-theme="dark"]{--bg:#10151c;--ink:#e7ecf3;--muted:#9aa7b8;--card:#19202a;--line:#3a4658;--hover:#232d3b;--focus:#7fb0ea}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Source Serif 4",Georgia,"Times New Roman",serif;font-size:17px;line-height:1.5;min-height:100vh;display:flex;justify-content:center;padding:28px 14px}
+main{width:100%;max-width:640px}
+h1,h2,h3{font-weight:600;line-height:1.2;margin:0 0 8px}
+h1{font-size:clamp(1.55rem,5vw,2rem);padding-bottom:10px;border-bottom:2px solid var(--ink);margin-bottom:18px}
+h2{font-size:1.02rem}
+h3{font-size:1.12rem;margin-top:24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:22px}
+button{font:inherit;font-weight:600;color:var(--card);background:var(--ink);border:1px solid var(--ink);border-radius:4px;padding:10px 18px;cursor:pointer;text-align:left}
+button:hover{opacity:.88}
+button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.opts{display:grid;gap:8px;margin-top:16px}
+.opts button{width:100%;background:var(--card);color:var(--ink);border:1px solid var(--line);font-weight:400;padding:12px 14px;display:flex;gap:12px;align-items:flex-start;opacity:1}
+.opts button::before{content:"";flex:none;width:16px;height:16px;margin-top:4px;border:1.5px solid var(--ink);border-radius:50%}
+.opts button:hover{background:var(--hover);border-color:var(--ink)}
+.bar{height:4px;background:var(--line);margin-bottom:18px}
+.bar i{display:block;height:100%;background:var(--ink);transition:width .3s}
+.q{font-size:1.15rem;line-height:1.45;margin:8px 0 0}
+.small{font-size:.86rem;color:var(--muted);line-height:1.35;margin:4px 0}
+.small b{color:var(--ink)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pair svg{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:4px;margin:0 0 8px}
+.pair p{margin:4px 0}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+.grid{display:grid;grid-template-columns:auto repeat(3,1fr);gap:4px;font-size:.78rem;line-height:1.2;margin-top:8px}
+.grid div{border:1px solid var(--line);border-radius:3px;padding:6px 4px;text-align:center;display:flex;align-items:center;justify-content:center;min-height:52px}
+.grid .h{border:0;font-weight:600;min-height:0}
+.grid .on{background:var(--ink);color:var(--card);font-weight:600;border-color:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main><div id="app"></div></main>
+<script>
+// S=[x,y] silly (x - deer..+ mines, y - wanted..+ feared). L=pro-deer(-)..pro-mining(+). G=pro-woman(-)..pro-man(+). Arrays are per answer.
+const Q=[
+{t:"If you were concerned about infection by the novel coronavirus (COVID-19), would you take Ivermectin, a horse anti-parasite medication, to lessen or prevent symptoms, regardless of the recommendation of a medical practitioner?",o:["Yes","No"],SY:[2,-2],tag:["Medical skeptic","Medical scientificist"],k:"med"},
+{t:"If you continued evolving to the end of evolution, would you become a crab or a sponge?",o:["Crab","Sponge","Bear"],SX:[1,0,-1],SY:[1,0,2],tag:["Crab: defensive of territory","Sponge: neutral, the only peaceful option","Bear: aggressive when provoked"],k:"evo"},
+{t:"Which of the following statements describes you best?",o:["Women desire me","Women are neutral toward me","Women fear me"],L:[-1,0,1],G:[-2,0,1],SX:[-1,0,1],SY:[-2,0,2],k:"women"},
+{t:"Which of the following statements describes you best?",o:["Fish desire me","Fish are neutral toward me","Fish fear me"],L:[-2,0,1],G:[-1,0,2],SX:[-2,0,1],SY:[-2,0,2],k:"fish"},
+{t:"Given a choice between a random man or a random bear, which would you rather encounter alone in the woods?",o:["Man","Bear"],G:[2,-2],SX:[0,-1],SY:[-1,1],tag:["Would rather meet the man","Pro-bear: would rather meet the bear"],k:"mb"},
+{t:"If you were to enter the profession of geology, would you specialize in economic geology or paleoclimatology?",o:["Economic geology","Paleoclimatology"],L:[2,-2],tag:["Mining geologist","Climate geologist"],k:"prof"},
+{t:"Which of the following statements describes you best?",o:["No","Geologists desire me","Geologists are distracted by my obsidian knife long enough for me to hit them with a baseball bat"],SY:[0,-2,2],tag:["","Desired by geologists","Feared by geologists (obsidian knife, baseball bat)"],k:"geo"},
+{t:"Bör det bli enklare att starta gruvor och annan industri i områden där rennäring bedrivs?<br><span class=\"small\">(Should it become easier to start mines and other industrial operations in areas where reindeer husbandry is practiced?)</span>",o:["Ja","Nej"],L:[2,-2]},
+{t:"At a three-way intersection, if all drivers come to a complete stop at the same time, you must yield the right-of-way to the _____?",o:["Deer","Truck","Salt"],L:[-2,0,2],G:[-2,2,0],SX:[-2,2,2],SY:[-1,2,-2],tag:["Deer Right-of-Way: fleeful victim of headlights (attracts truck)","Truck Right-of-Way: natural predator (attracts salt)","Salt Right-of-Way: geologist's elixir of life (attracts deer)"],k:"int"},
+{t:"The government should enforce divorced men paying for the care of the family bat.",o:["Yes","No"],k:"bat"},
+{t:"Given a choice, which temporary sensory impairment should be pursued as a matter of public policy?",o:["Three days of stew-induced blindness","Three days of stew-induced deafness"],k:"stew"}
+];
+const mxf=f=>Q.reduce((t,q)=>t+(q[f]?Math.max(...q[f].map(Math.abs)):0),0);
+const rng=(f,e)=>Q.reduce((t,q)=>q[f]?[t[0]+Math.max(0,...q[f]),t[1]+Math.max(0,...q[f].map(v=>-v))]:t,[e,e]);
+const RL=rng("L",2),RG=rng("G",2),RSX=rng("SX",2),RSY=rng("SY",1);
+const nz=(v,r)=>v>=0?v/r[0]:v/r[1];
+const SILLY={TL:["Beloved Deer Whisperer","The herd trusts you, the climate geologists are into you, and you smell faintly of fish."],
+TR:["Charming Mine Baron","Everyone wants you at the party and you want a quarry under it. The salt trucks wave first."],
+BL:["Feared Hermit of the Bear Cave","Nature is your friend. Humans are another matter."],
+BR:["Terrifying Salt Truck","You have the right of way, and everyone, including the deer, knows it."],
+C:["Neutral Sponge","Not loved, not feared, no vibes either way. You just soak things up."]};
+const TRUE={TL:["Bat Aunt of the Forest","The deer trust you, the bat is fed, and no mine will open on your watch."],
+TR:["Mine Owner Who Pays the Bat Bills","You dig where you like, but never miss a bat payment. Complicated man."],
+BL:["Lone Man Among the Deer","Pro-man, pro-deer, and the bat is not your problem."],
+BR:["Salt Truck Dad Who Skipped Bat Support","Mining first, bat last. The deer see you coming and still cross the road."],
+C:["Perfectly Reasonable Person","Balanced on every axis. Deeply suspicious."]};
+const FW=[["Fishes get in line","Chick magnet","Women want me, fish fear me"],
+["Fish magnet","Life is tough and so are women","Fish monger"],
+["Women fear me, fish want me","Five gallon bucket","Men avert their eyes as I walk"]];
+let i=0,A=[];
+const app=document.getElementById("app");
+const quad=(x,y)=>Math.hypot(x,y)<0.15?"C":(y<0?"T":"B")+(x<0?"L":"R");
+function chart(x,y,c,aria){
+ const px=200+x*165,py=200+y*165;
+ return `<svg viewBox="0 0 400 400" role="img" aria-label="${aria}">
+ <rect x="0" y="0" width="200" height="200" fill="${c.f[0]}"/><rect x="200" y="0" width="200" height="200" fill="${c.f[1]}"/>
+ <rect x="0" y="200" width="200" height="200" fill="${c.f[2]}"/><rect x="200" y="200" width="200" height="200" fill="${c.f[3]}"/>
+ <path d="M200 0V400M0 200H400" stroke="#1b2a41" stroke-width="2"/>
+ <g font-family="${c.ff}" font-size="21" font-weight="700" fill="#1b2a41" text-anchor="middle">
+ <text x="100" y="30">${c.q[0]}</text><text x="300" y="30">${c.q[1]}</text><text x="100" y="384">${c.q[2]}</text><text x="300" y="384">${c.q[3]}</text>
+ <text x="200" y="70" font-size="19">${c.t}</text><text x="200" y="344" font-size="19">${c.b}</text></g>
+ <g font-family="${c.ff}" font-size="19" font-weight="700" fill="#1b2a41"><text x="8" y="190">${c.l}</text><text x="392" y="190" text-anchor="end">${c.r}</text></g>
+ <circle cx="${px}" cy="${py}" r="12" fill="#1b2a41" stroke="#fff" stroke-width="4"/></svg>`;
+}
+function intro(){
+ i=0;A=[];
+ app.innerHTML=`<h1>The Eleven Axes</h1>
+ <div class="card"><p>You are about to encounter our multi-dimensional political mapping instrument that evaluates social & ideological positions through an intensive eleven-question exam.</p>
+ <button id="go">Begin the assessment</button></div>`;
+ document.getElementById("go").onclick=ask;
+}
+function ask(){
+ const q=Q[i];
+ app.innerHTML=`<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${Q.length}" aria-valuenow="${i}"><i style="width:${i/Q.length*100}%"></i></div>
+ <div class="card"><div class="small">Question ${i+1} of ${Q.length}</div>
+ <p class="q">${q.t}</p>
+ <div class="opts">${q.o.map((o,k)=>`<button data-k="${k}">${o}</button>`).join("")}</div></div>`;
+ app.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{A.push(Number(b.dataset.k));i++;i<Q.length?ask():done()});
+}
+function done(){
+ let sx=0,sy=0,l=0,g=0,tags=[],fish=1,women=1;
+ Q.forEach((q,n)=>{const a=A[n];
+  sx+=(q.SX&&q.SX[a])||0;sy+=(q.SY&&q.SY[a])||0;
+  l+=(q.L&&q.L[a])||0;g+=(q.G&&q.G[a])||0;
+  if(q.k==="fish")fish=a;else if(q.k==="women")women=a;else if(q.tag&&q.k&&q.tag[a])tags.push(q.tag[a]);});
+ const ix=k=>Q.findIndex(x=>x.k===k);
+ const votes=[A[ix("med")]===0?1:-1,A[ix("bat")]===0?-1:1,A[ix("stew")]===0?-1:1];
+ if(A[ix("geo")]===2)votes.push(-1);
+ const b=votes.reduce((t,v)=>t+v,0)/votes.length;
+ sx+=b;sy+=b;l+=b;g+=b*2;
+ if(A[ix("geo")]===1){const d=A[ix("prof")]===0?1:-1;l+=d;sx+=d}
+ tags.push(b>0||(b===0&&A[ix("bat")]===1)?"Anti-bat":"Pro-bat");
+ const X1=nz(sx,RSX),Y1=nz(sy,RSY),X2=nz(l,RL),Y2=nz(g,RG);
+ const pct=v=>Math.round(Math.abs(v)*100);
+ const n1=SILLY[quad(X1,Y1)],n2=TRUE[quad(X2,Y2)];
+ const l1=`${pct(X1)}% ${X1<0?"Pro-deer":"Pro-mineral"}, ${pct(Y1)}% ${Y1<0?"Loved":"Feared"}`;
+ const l2=`${pct(X2)}% ${X2<0?"Pro-deer":"Pro-mining"}, ${pct(Y2)}% ${Y2<0?"Pro-woman":"Pro-man"}`;
+ const fw=FW[women][fish];
+ const grid=`<div class="grid"><div class="h"></div><div class="h">Fish desire me</div><div class="h">Fish neutral</div><div class="h">Fish fear me</div>`+
+  FW.map((r,ri)=>`<div class="h">${["Women desire me","Women neutral","Women fear me"][ri]}</div>`+r.map((c,ci)=>`<div class="${ri===women&&ci===fish?"on":""}">${c}</div>`).join("")).join("")+`</div>`;
+ const c1={f:["#e8c7c3","#c3d3e8","#c5ddcb","#d6cbe6"],ff:"'Source Serif 4',Georgia,serif",q:["Deer Whisperer","Mine Baron","Bear Hermit","Salt Truck"],t:"LOVED",b:"FEARED",l:"PRO-DEER",r:"PRO-MINERAL",e:"🦌"};
+ const c2={f:["#e8c7c3","#c3d3e8","#c5ddcb","#d6cbe6"],ff:"'Source Serif 4',Georgia,serif",q:["Bat Aunt","Bat-Pay Miner","Lone Deer Man","Salt Truck Dad"],t:"PRO-WOMAN",b:"PRO-MAN",l:"PRO-DEER",r:"PRO-MINING",e:"📍"};
+ app.innerHTML=`<div class="card pop"><div class="pair">
+ <div><h3 style="margin-top:0">Sympathetic Compass</h3><p class="small"><i>How you are received.</i></p>${chart(X1,Y1,c1,"Sympathetic Compass result: "+n1[0])}<h2>${n1[0]}</h2><p class="small">${n1[1]}</p><p class="small"><b>${l1}</b></p></div>
+ <div class="true"><h3 style="margin-top:0">Social Compass</h3><p class="small"><i>What you would defend.</i></p>${chart(X2,Y2,c2,"Social Compass result: "+n2[0])}<h2>${n2[0]}</h2><p class="small">${n2[1]}</p><p class="small"><b>${l2}</b></p></div></div>
+ <h3>Fish and women alignment:</h3>${grid}
+ <h3>Other readings</h3><ul>${tags.map(t=>`<li>${t}</li>`).join("")}</ul>
+ <div class="row"><button id="again">Retake</button><button id="cp">Copy result</button></div></div>`;
+ document.getElementById("again").onclick=intro;
+ const cp=document.getElementById("cp");
+ cp.onclick=()=>{
+  const t=`Sympathetic Compass: ${n1[0]} (${l1}). Social Compass: ${n2[0]} (${l2}). Fish and women alignment: ${fw}.`;
+  try{navigator.clipboard.writeText(t).then(()=>cp.textContent="Copied!",()=>cp.textContent=t)}catch(e){cp.textContent=t}
+ };
+}
+intro();
+</script>
+</body>
+</html>
